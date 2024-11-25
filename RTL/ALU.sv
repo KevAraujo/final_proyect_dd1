@@ -2,10 +2,8 @@ module ALU #(parameter WIDTH = 4) (
   input wire [WIDTH-1:0] a, b,
   input wire [2:0] select,
   output wire [WIDTH*2-1:0] out,
-  output wire [WIDTH-1:0] result_add, result_sub,div,
-  output wire [WIDTH-1:0] r_and, r_or, r_xor,
-  output wire [WIDTH*2-1:0] result_mul,
   output wire a_greater, a_equal, a_less,
+  input wire clk,
   output wire carry_out
 );
   
@@ -15,20 +13,13 @@ module ALU #(parameter WIDTH = 4) (
     .b(b),
     .select(select),
     .out(out),
-    .result_add(result_add),
-    .carry_out(carry_out),
-    .result_sub(result_sub),
-    .r_and(r_and),
-    .r_or(r_or),
-    .r_xor(r_xor),
+    .carry_out(carry_out), 
     .a_greater(a_greater),
     .a_equal(a_equal),
     .a_less(a_less),
-    .result_mul(result_mul),
-    .div(div)
+    .clk(clk)
   );
 
- 
 endmodule
 
 //suma___________________________________________________________
@@ -43,13 +34,23 @@ endmodule
 //Resta__________________________________________________________
 module subtractor #(parameter WIDTH = 4) (
   input wire [WIDTH-1:0] a, b,
-  output wire [WIDTH-1:0] diff
+  output reg [WIDTH:0] diff,
+  output reg [0:0] sign,
+  input wire clk
 
 );
-        // Usamos un ancho mayor para manejar el borrow
+wire [WIDTH-1:0] signed_b;
 
-  assign diff = a - b; // Agregamos un bit extra para manejar el borrow
- // El bit más significativo de 'result' es el borrow
+assign signed_b = ~b+1;
+
+always @(a or b) if (b > a) begin
+diff = ~(a + signed_b-1);
+sign = 1;
+end
+else begin
+diff = (a + signed_b);
+sign = 0;
+end
 
 endmodule
 
@@ -113,12 +114,13 @@ endmodule
 module selection #(parameter WIDTH = 4)(
   input wire [WIDTH-1:0] a, b,
   input wire [2:0] select,
-  output wire [WIDTH*2-1:0] out,
-  output wire [WIDTH-1:0] result_add, result_sub,div,
-  output wire [WIDTH-1:0] r_and, r_or, r_xor,
-  output wire [WIDTH*2-1:0] result_mul,
+  output reg [WIDTH*2-1:0] out,
+  wire [WIDTH-1:0] result_add, result_sub,div,
+  wire [WIDTH-1:0] r_and, r_or, r_xor,
+  wire [WIDTH*2-1:0] result_mul,
   output wire a_greater, a_equal, a_less,
-  output wire carry_out 
+  output wire carry_out,
+  input wire clk
 );
   
   multiplicator #(WIDTH) u_multiplicator (
@@ -168,5 +170,7 @@ module selection #(parameter WIDTH = 4)(
     .b(b),
     .bitwisexor(r_xor)
   );
-  assign out = (select == 3'b000) ? {carry_out, result_add} : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
+  
+  always @(posedge clk)
+   out = (select == 3'b000) ? {carry_out, result_add} : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
 endmodule
