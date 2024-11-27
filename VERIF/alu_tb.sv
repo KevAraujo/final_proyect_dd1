@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module alu_tb;
 
     parameter WIDTH = 4;
@@ -5,24 +7,30 @@ module alu_tb;
     parameter GLOBAL_TIMEOUT = 100;
 
     logic clk;
-    //logic rst;
-    logic [WIDTH*n_alu:0] a;
-    logic [WIDTH*n_alu:0] b;
-    logic [2:0] select;
-    logic carry_out;
-    logic a_greater, a_equal, a_less;
-    logic [WIDTH*n_alu*8-1:0] data_out;
+
+    alu_if #(WIDTH, n_alu) alu_vif(clk);
 
     ALU_VECTORIAL #(.WIDTH(WIDTH), .n_alu(n_alu)) DUT (
-        .clk(clk), 
-        //.rst(rst),          
-        .a(a),  
-        .b(b),
-        .select(select),
-        .carry_out(carry_out),
-        .a_greater(a_greater), .a_equal(a_equal), .a_less(a_less),
-        .data_out(data_out)
+        .clk(alu_vif.clk), 
+        //.rst(alu_vif.rst),          
+        .a(alu_vif.a),  
+        .b(alu_vif.b),
+        .select(alu_vif.select),
+        .carry_out(alu_vif.carry_out),
+        .a_greater(alu_vif.a_greater), .a_equal(alu_vif.a_equal), .a_less(alu_vif.a_less),
+        .data_out(alu_vif.out)
     );
+
+    always #5 clk = ~clk;
+
+    initial begin
+        clk = 0;
+    end
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars;
+    end
 
     initial begin
         $display("WELCOME!");

@@ -1,4 +1,5 @@
 WORK
+PRJ
 **/*.log
 **/*.wdb
 **/*.pb
@@ -16,4 +17,4 @@ WORK
 **/vivado* 
 **/work* 
 **/xcrg* 
-**/xsc* 
+**/xsc*

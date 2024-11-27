@@ -1,7 +1,22 @@
 @echo off
-call C:\Xilinx\Vivado\2022.2\settings64.bat
+
+if "%2"=="" (
+    echo "No Vivado version specified! Defaulting to 2022.2."
+    set "vivado_version=2022.2"
+) else (
+    set "vivado_version=%2"
+)
+
+if exist "C:\Xilinx\Vivado\%vivado_version%\settings64.bat" (
+    call "C:\Xilinx\Vivado\%vivado_version%\settings64.bat"
+) else (
+    echo "Error: Vivado version %vivado_version% not found!"
+    echo "Please check the version or ensure Vivado is installed correctly."
+    exit /B 1
+)
 
 if "%1"=="run" (goto run) 
+if "%1"=="sim" (goto sim) 
 if "%1"=="cov" (goto cov)
 if "%1"=="waves" (goto waves) 
 if "%1"=="help" (goto help)
@@ -15,6 +30,11 @@ goto EOF
 	call xelab -debug typical -relax alu_tb
 	call xsim work.alu_tb -log alu_tb.log -tclbatch "wave.tcl"
 	if "%1"=="run" (exit /B 0)
+
+:sim
+	echo Making sim...
+	call xsim work.alu_tb -log alu_tb.log -tclbatch "wave.tcl"
+	if "%1"=="sim" (exit /B 0)
 
 :cov
 	echo Making cov...
