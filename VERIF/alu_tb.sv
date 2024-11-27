@@ -34,6 +34,7 @@ module alu_tb;
 
     initial begin
         $display("WELCOME!");
+        alu_vif.hello_world();
     end
 
     initial begin

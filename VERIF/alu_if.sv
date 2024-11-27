@@ -7,5 +7,14 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   logic [0:0] carry_out;
 
   // BFM for stimuli
+  function automatic hello_world();
+    $display("Hello from [%m]!");
+  endfunction
+
+  // BFM for testing
+
+  // Coverage
+
+  // Assertions
   
 endinterface
