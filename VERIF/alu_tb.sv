@@ -12,10 +12,11 @@ module alu_tb;
 
     ALU_VECTORIAL #(.WIDTH(WIDTH), .n_alu(n_alu)) DUT (
         .clk(alu_vif.clk), 
-        //.rst(alu_vif.rst),          
+        .arst(alu_vif.arst),          
         .a(alu_vif.a),  
         .b(alu_vif.b),
         .select(alu_vif.select),
+        .enable(alu_vif.enable),
         .carry_out(alu_vif.carry_out),
         .a_greater(alu_vif.a_greater), .a_equal(alu_vif.a_equal), .a_less(alu_vif.a_less),
         .data_out(alu_vif.out)
