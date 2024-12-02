@@ -1,10 +1,12 @@
-module ALU_VECTORIAL #(parameter WIDTH = 4, parameter n_alu = 4)(
+module ALU_VECTORIAL #(parameter WIDTH = 4, n_alu = 4)(
     input logic clk,               // Reloj de entrada
     //input logic rst,           // Señal de reset
     input wire [WIDTH*n_alu:0] a,    // Entrada de datos
     input wire [WIDTH*n_alu:0] b,
     input wire [2:0] select,
+    //input wire enable,
     output wire carry_out,
+    output wire [WIDTH:0]enable,
     output wire a_greater, a_equal, a_less,
     output wire [WIDTH*n_alu*8-1:0] data_out   // Salida de datos
 );
@@ -22,6 +24,7 @@ module ALU_VECTORIAL #(parameter WIDTH = 4, parameter n_alu = 4)(
                 .b(b[(i*WIDTH) +: WIDTH]),
                 .out(data_out[i*8 +: 8]),
                 .select(select),
+                .enable(enable[i]),
                 .carry_out(carry_out), 
                 .a_greater(a_greater),
                 .a_equal(a_equal),
