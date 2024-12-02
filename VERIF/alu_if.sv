@@ -86,6 +86,16 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
     end
   endfunction
 
+  function automatic a_near_max_min_b_random(input integer value);
+    std::randomize(a) with{ (a > (WIDTH * WIDTH) - (value)) || (a < (value));};
+  std::randomize(b);
+  endfunction
+  
+  function automatic b_near_max_min_a_random(input integer value);
+    std::randomize(b) with{ (b > (WIDTH * WIDTH) - (value)) || (b < (value));};
+  std::randomize(a);
+  endfunction
+  
   // BFM for testing
   task automatic test_0_random();
     int i; 
