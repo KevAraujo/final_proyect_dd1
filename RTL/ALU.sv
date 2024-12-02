@@ -122,6 +122,7 @@ module selection #(parameter WIDTH = 4)(
   output wire a_greater, a_equal, a_less,
   output wire carry_out,
   input wire enable,
+  input wire arst,
   input wire clk
 );
   
@@ -173,11 +174,15 @@ module selection #(parameter WIDTH = 4)(
     .bitwisexor(r_xor)
   );
   
-   always @(posedge clk)begin
-  if (enable == 1)
-   out = (select == 3'b000) ? {carry_out, result_add} : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
+   always @(posedge clk or negedge arst) begin
+  if (arst == 0)begin
+    if (enable == 1)
+        out = (select == 3'b000) ? {carry_out, result_add} : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
+    else
+        out = '0;
+  end
   else
-   out = '0;
+  out = 0;
   end
 	
 endmodule
