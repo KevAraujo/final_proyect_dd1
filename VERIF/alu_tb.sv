@@ -4,7 +4,7 @@ module alu_tb;
 
     parameter WIDTH = 4;
     parameter n_alu = 4;
-    parameter GLOBAL_TIMEOUT = 100;
+    parameter GLOBAL_TIMEOUT = 100000;
 
     logic clk;
 
@@ -23,18 +23,18 @@ module alu_tb;
 
     always #5 clk = ~clk;
 
-    initial begin
-        clk = 0;
-    end
-
+    // Main test
     initial begin
         $dumpfile("dump.vcd");
         $dumpvars;
-    end
 
-    initial begin
         $display("WELCOME!");
         alu_vif.hello_world();
+
+        clk = 0;
+        alu_vif.test_0_random();
+
+        $finish;
     end
 
     initial begin
