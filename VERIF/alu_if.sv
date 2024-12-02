@@ -21,6 +21,9 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   endfunction
   
   function automatic a_greater_b_random();
+    if (!std::randomize(a, b) with {a > b;} ) begin
+      $display("Randomization in %m failed!");
+    end
   endfunction
   
   function automatic b_random();
@@ -28,6 +31,9 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   endfunction
   
   function automatic b_greater_a_random();
+    if (!std::randomize(a, b) with {b > a;} ) begin
+      $display("Randomization in %m failed!");
+    end
   endfunction
   
   function automatic sel_random();
