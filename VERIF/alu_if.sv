@@ -102,6 +102,122 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
 
   // Coverage
 
-  // Assertions
+   // Assertions
+  function check_sum();
+   assert  (out == a + b)else begin
+   $error("ADDER has not donne the sum correctly.");
+   end
+   endfunction
+   
+   function check_carry_out_1();
+    if ((b + a) > WIDTH*WIDTH-1)
+   assert  (carry_out > 0)else begin
+   $error("carry_out should have a high value");
+   end
+   endfunction
+
+   function check_carry_out_0();
+    if ((b + a) <= WIDTH*WIDTH-1)
+   assert  (carry_out > 0)else begin
+   $error("carry_out should have a low value");
+   end
+   endfunction
+
+   function check_a_min();
+    if (a == 0)
+   assert  (out == b)else begin
+   $error("out should have 'b' value");
+   end
+   endfunction
+
+   function check_b_min();
+    if (b == 0)
+   assert  (out == b)else begin
+   $error("out should have 'a' value");
+   end
+   endfunction
+
+   function check_negative_result();
+    if (b > a)
+   assert  (out == b - a)else begin
+   $error("SUBSTRACTOR has not donne the substraction b > a correctly ");
+   end
+   endfunction
+   
+   function check_positive_result();
+    if (a > b)
+   assert  (out == a - b)else begin
+   $error("SUBSTRACTOR has not donne the substraction a > b correctly ");
+   end
+   endfunction
+   
+   /*function check_sign_bit_pos();
+    if (a > b)
+   assert  (sign_bit == 0)else begin
+   $error("sign bit is not positive");
+   end
+   endfunction
+*/
+   /*function check_sign_bit_negative();
+    if (b > a)
+   assert  (sign_bit == 1)else begin
+   $error("sign bit is not negative");
+   end
+   endfunction
+*/
+   function check_a_sub_0();
+    if (a == 0)
+   assert  (out == b)else begin
+   $error("SUBSTRACTOR has an error with the substraction");
+   end
+   endfunction
+   
+   function check_b_sub_0();
+    if (b == 0)
+   assert  (out == a)else begin
+   $error("SUBSTRACTOR has an error with the substraction");
+   end
+   endfunction
+   
+   function check_mult_result();
+   assert  (out == a * b)else begin
+   $error("MULTIPLICATOR has not done multiplication correctly");
+   end
+   endfunction
+   
+   function check_mult_by_zero();
+    if ((b == 0) || (a == 0))
+   assert  (out == 0)else begin
+   $error("The multiblication by zero should be zero");
+   end
+   endfunction
+   
+   function check_mult_a_1();
+    if (a == 1)
+   assert  (out == b)else begin
+   $error("The multiblication result should be 'b'");
+   end
+   endfunction
+   
+   function check_mult_b_1();
+    if (b == 1)
+   assert  (out == a)else begin
+   $error("The multiblication result should be 'a'");
+   end
+   endfunction
+   
+   function check_mult_pair_result();
+    if ((b % 2 == 0) || (a % 2 == 0))
+   assert  (out % 2 == 0)else begin
+   $error("The multiplicatión result should have been an even number");
+   end
+   endfunction
+   
+   function check_mult_unpair_result();
+    if ((b % 2 == 1) && (a % 2 == 1))
+   assert  (out % 2 == 1)else begin
+   $error("The multiplicatión result should have been an odd number");
+   end
+   endfunction
 
 endinterface
