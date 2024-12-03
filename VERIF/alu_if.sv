@@ -96,7 +96,44 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   std::randomize(a);
   endfunction
   
-  // BFM for testing
+  function automatic a_b_random_overflow();
+  std::randomize(a, b) with{b + a == WIDTH*WIDTH;};
+  endfunction
+  
+  
+  //------------------------------- BFM for testing--------------------------------------------
+  
+  
+  task automatic test_carry_random();
+    repeat (50)@(posedge clk)begin
+    a_b_random_overflow();
+    end
+  endtask
+  
+  task automatic test_max_mid_min_value();
+  event event_a;
+  event event_b;
+    @(posedge clk)begin
+    a_value('1);
+    b_value('1);
+    ->event_a;
+    end
+    
+    wait(event_a.triggered);
+    @(posedge clk)begin
+    a_value(WIDTH*WIDTH/2);
+    b_value(WIDTH*WIDTH/2);
+    ->event_b;
+    end
+    
+    wait(event_b.triggered);
+    @(posedge clk)begin
+    a_value('0);
+    b_value('0);
+    end
+    
+  endtask
+  
   task automatic test_0_random();
     int i; 
     for (i = 0; i < 50; i = i + 1) begin
@@ -110,17 +147,87 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
       @(posedge clk);
     end
   endtask
+  
+  task automatic test_directed_test(input integer value1, value2);
+    a_value(value1);
+    b_value(value2);
+  endtask
+  
+  task automatic test_full_random();
+    repeat (100)@(posedge clk)begin
+    a_random();
+    b_random();
+    end
+  endtask
+  
+  task automatic test_a_greater_than_b();
+    repeat (100)@(posedge clk)begin
+    a_greater_b_random();
+    end
+  endtask
+  
+  task automatic test_b_greater_than_a();
+    repeat (100)@(posedge clk)begin
+    b_greater_a_random();
+    end
+  endtask
+  
+  task automatic test_reset_random();
+    fork
+      // Bloque 1: Randomizar `a` y `b` en el próximo flanco de reloj
+      repeat (100)@(posedge clk) begin
+        a=$random;
+        b=$random;
+      end
 
-  // Coverage
+      repeat (100) begin
+        arst=$random;
+        #15;
+      end
+      join
+  endtask
+  
+  task automatic test_reset_timed(input integer value);
+    fork
+      // Bloque 1: Randomizar `a` y `b` en el próximo flanco de reloj
+      repeat (50)@(posedge clk) begin
+        a=$random;
+        b=$random;
+      end
 
-   // Assertions
+        arst=$random;
+        #25;
+      join
+  endtask
+  
+  task automatic test_sel_random();
+    fork
+      // Bloque 1: Randomizar `a` y `b` en el próximo flanco de reloj
+      repeat (400)@(posedge clk) begin
+        a=$random;
+        b=$random;
+      end
+
+      repeat (400) begin
+        sel_random();
+      end
+      join
+  endtask
+
+
+  //-------------------------------------------- Coverage ------------------------------------------------
+  
+  
+  //------------------------------------------- Assertions -----------------------------------------------
+  
+  
   function check_sum();
    assert  (out == a + b)else begin
    $error("ADDER has not donne the sum correctly.");
    end
    endfunction
    
-   function check_carry_out_1();
+   function check_carry _out_1();
     if ((b + a) > WIDTH*WIDTH-1)
    assert  (carry_out > 0)else begin
    $error("carry_out should have a high value");
@@ -230,5 +337,4 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
    $error("The multiplicatión result should have been an odd number");
    end
    endfunction
-
 endinterface
