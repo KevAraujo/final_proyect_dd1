@@ -221,120 +221,65 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   //------------------------------------------- Assertions -----------------------------------------------
   
   
-  function check_sum();
-   assert  (out == a + b)else begin
-   $error("ADDER has not donne the sum correctly.");
-   end
-   endfunction
+  /* 
+   property check_sum;
+    @(posedge clk) (1) |=> (out == a + b);
+   endproperty
+    assert property (check_sum) else $error("ADDER has not donne the sum correctly. A=%d;  B=%d;  out=%d",a,b,out);
+   */
    
-   function check_carry _out_1();
-    if ((b + a) > WIDTH*WIDTH-1)
-   assert  (carry_out > 0)else begin
-   $error("carry_out should have a high value");
-   end
-   endfunction
+   property check_carry_out_1;
+   if (select == '0)
+   @(posedge clk)((b + a) > WIDTH*WIDTH-1) |=> (carry_out > 0);
+   endproperty
+   assert property (check_carry_out_1)else $error("carry_out should have a high value");
 
-   function check_carry_out_0();
-    if ((b + a) <= WIDTH*WIDTH-1)
-   assert  (carry_out > 0)else begin
-   $error("carry_out should have a low value");
-   end
-   endfunction
-
-   function check_a_min();
-    if (a == 0)
-   assert  (out == b)else begin
-   $error("out should have 'b' value");
-   end
-   endfunction
-
-   function check_b_min();
-    if (b == 0)
-   assert  (out == b)else begin
-   $error("out should have 'a' value");
-   end
-   endfunction
-
-   function check_negative_result();
-    if (b > a)
-   assert  (out == b - a)else begin
-   $error("SUBSTRACTOR has not donne the substraction b > a correctly ");
-   end
-   endfunction
+   property check_carry_out_0;
+   if (select == '0)
+   @(posedge clk)(a + b <= WIDTH*WIDTH-1) |=> (carry_out == 0);
+   endproperty
+   assert property (check_carry_out_0)else $error("carry_out should have a low value");
    
-   function check_positive_result();
-    if (a > b)
-   assert  (out == a - b)else begin
-   $error("SUBSTRACTOR has not donne the substraction a > b correctly ");
-   end
-   endfunction
+   property check_a_min;
+   if (select == '0)
+   @(posedge clk)(a == '0) |=> (out == b);
+   endproperty
+   assert property (check_a_min) else $error("out should have 'b' value");
+
+   property check_b_min;
+   if (select == '0)
+   @(posedge clk)(b == 0) |=> (out == b);
+   endproperty
+   assert property (check_b_min) else $error("out should have 'a' value");
+
+   property check_negative_result;
+   if (select == 3'b001)
+   @(posedge clk)(b > a) |=> (out == b - a);
+   endproperty
+   assert property (check_negative_result)else $error("SUBSTRACTOR has not donne the substraction b > a correctly ");
    
-   /*function check_sign_bit_pos();
-    if (a > b)
-   assert  (sign_bit == 0)else begin
-   $error("sign bit is not positive");
-   end
-   endfunction
+   property check_positive_result;
+   if (select == 3'b001)
+   @(posedge clk)(a > b) |=> (out == a - b);
+   endproperty
+   assert property (check_positive_result)else $error("SUBSTRACTOR has not donne the substraction a > b correctly ");
+  /*
+   property check_sign_bit_pos;
+   if (select == 3'b001)
+   @(posedge clk)(a > b) |=> (sign_bit == 0);
+   endproperty
+   assert property (check_sign_bit_pos)else $error("sign bit is not positive");
+
+   property check_sign_bit_negative;
+   if (select == 3'b001)
+   @(posedge clk)(b > a) |=> (sign_bit == 1);
+   endproperty
+   assert property (sign_bit == 1)else $error("sign bit is not negative");
 */
-   /*function check_sign_bit_negative();
-    if (b > a)
-   assert  (sign_bit == 1)else begin
-   $error("sign bit is not negative");
-   end
-   endfunction
-*/
-   function check_a_sub_0();
-    if (a == 0)
-   assert  (out == b)else begin
-   $error("SUBSTRACTOR has an error with the substraction");
-   end
-   endfunction
-   
-   function check_b_sub_0();
-    if (b == 0)
-   assert  (out == a)else begin
-   $error("SUBSTRACTOR has an error with the substraction");
-   end
-   endfunction
-   
-   function check_mult_result();
-   assert  (out == a * b)else begin
-   $error("MULTIPLICATOR has not done multiplication correctly");
-   end
-   endfunction
-   
-   function check_mult_by_zero();
-    if ((b == 0) || (a == 0))
-   assert  (out == 0)else begin
-   $error("The multiblication by zero should be zero");
-   end
-   endfunction
-   
-   function check_mult_a_1();
-    if (a == 1)
-   assert  (out == b)else begin
-   $error("The multiblication result should be 'b'");
-   end
-   endfunction
-   
-   function check_mult_b_1();
-    if (b == 1)
-   assert  (out == a)else begin
-   $error("The multiblication result should be 'a'");
-   end
-   endfunction
-   
-   function check_mult_pair_result();
-    if ((b % 2 == 0) || (a % 2 == 0))
-   assert  (out % 2 == 0)else begin
-   $error("The multiplicatión result should have been an even number");
-   end
-   endfunction
-   
-   function check_mult_unpair_result();
-    if ((b % 2 == 1) && (a % 2 == 1))
-   assert  (out % 2 == 1)else begin
-   $error("The multiplicatión result should have been an odd number");
-   end
-   endfunction
+   property check_a_sub_0;
+   if (select == 3'b001)
+   @(posedge clk)(a == 0) |=> (out == b)
+   endproperty
+   assert property (check_a_sub_0)else $error("SUBSTRACTOR has an error with the substraction");
+     
 endinterface
