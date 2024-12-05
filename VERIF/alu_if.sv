@@ -8,6 +8,13 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   logic enable;
   logic arst;
 
+  initial begin
+  select = 3'b000;
+  a = 0;
+  b = 0;
+  enable = '1;
+  arst = 0;
+  end
   // BFM for stimuli
   function automatic hello_world();
     $display("Hello world from [%m]!");
