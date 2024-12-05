@@ -5,6 +5,7 @@ module alu_tb;
     parameter WIDTH = 4;
     parameter n_alu = 4;
     parameter GLOBAL_TIMEOUT = 100000;
+    parameter GLOBAL_TIMEOUT_ON = 0;
 
     logic clk;
 
@@ -21,6 +22,12 @@ module alu_tb;
         .a_greater(alu_vif.a_greater), .a_equal(alu_vif.a_equal), .a_less(alu_vif.a_less),
         .data_out(alu_vif.out)
     );
+    
+    function eot();
+        $display("EOT");
+        $display("Overall coverage: %.2f%%", $get_coverage());
+        $finish;
+    endfunction
 
     always #5 clk = ~clk;
 
@@ -34,14 +41,19 @@ module alu_tb;
 
         clk = 0;
         alu_vif.test_0_random();
+        alu_vif.test_n_random(10);
+        alu_vif.test_sel_random();
 
+        eot();
         $finish;
     end
 
     initial begin
-        #GLOBAL_TIMEOUT;
-        $display("EOT");
-        $finish;
+        if (GLOBAL_TIMEOUT_ON) begin
+            #GLOBAL_TIMEOUT;
+            eot();
+            $finish;
+        end
     end
 
 endmodule
