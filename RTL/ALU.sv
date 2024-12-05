@@ -1,6 +1,7 @@
 module ALU #(parameter WIDTH = 4) (
   input wire [WIDTH-1:0] a, b,
   input wire [2:0] select,
+  input wire arst,
   output wire [WIDTH*2-1:0] out,
   output wire a_greater, a_equal, a_less,
   input wire clk,
@@ -13,6 +14,8 @@ module ALU #(parameter WIDTH = 4) (
     .a(a),
     .b(b),
     .select(select),
+    .enable(enable),
+    .arst(arst),
     .out(out),
     .carry_out(carry_out), 
     .a_greater(a_greater),
@@ -36,21 +39,22 @@ endmodule
 module subtractor #(parameter WIDTH = 4) (
   input wire [WIDTH-1:0] a, b,
   output reg [WIDTH:0] diff,
-  output reg [0:0] sign,
+  output reg sign,
   input wire clk
-
 );
-wire [WIDTH-1:0] signed_b;
 
+wire [WIDTH-1:0] signed_b;
+//reg sign;
 assign signed_b = ~b+1;
 
 always @(a or b) if (b > a) begin
-diff = ~(a + signed_b-1);
 sign = 1;
+diff = ~(a + signed_b-1);
 end
+
 else begin
-diff = (a + signed_b);
 sign = 0;
+diff = {(a + signed_b)};
 end
 
 endmodule
@@ -120,12 +124,12 @@ module selection #(parameter WIDTH = 4)(
   wire [WIDTH-1:0] r_and, r_or, r_xor,
   wire [WIDTH*2-1:0] result_mul,
   output wire a_greater, a_equal, a_less,
-  output wire carry_out,
+  output reg carry_out,
   input wire enable,
   input wire arst,
   input wire clk
 );
-  
+  int carry;
   multiplicator #(WIDTH) u_multiplicator (
     .a(a),
     .b(b),
@@ -141,11 +145,13 @@ module selection #(parameter WIDTH = 4)(
       .a(a),
       .b(b),
       .sum(result_add),
-      .carry_out(carry_out)
+      .carry_out(carry)
   );
 
   subtractor #(WIDTH) u_subtractor (
-	a, b, result_sub
+	  .a(a),
+	  .b(b),
+	  .diff(result_sub)
   );
 
   comparator #(WIDTH) u_comparator (
@@ -174,15 +180,19 @@ module selection #(parameter WIDTH = 4)(
     .bitwisexor(r_xor)
   );
   
-   always @(posedge clk or negedge arst) begin
+  always @(posedge clk or negedge arst) begin
   if (arst == 0)begin
-    if (enable == 1)
-        out = (select == 3'b000) ? {carry_out, result_add} : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
-    else
+    if (enable == 1)begin
+        out = (select == 3'b000) ? (result_add) : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
+        carry_out = (select == 3'b000) ? carry : 0;
+        end
+    else begin
         out = '0;
+        carry_out = 0;
+        end
   end
   else
   out = 0;
   end
-	
 endmodule
+
