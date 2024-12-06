@@ -324,67 +324,61 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   
   
   //------------------------------------------- Assertions -----------------------------------------------
-  // $past
   
-  /* 
-   property check_sum;
-    @(posedge clk) (1) |=> (out == $past(a,1) + $past(b,1) );
+  property check_sum;
+    @(posedge clk) (select == '0) |-> (out[WIDTH-1:0] == $past(a) + $past(b));
    endproperty
-    assert property (check_sum) else $error("ADDER has not donne the sum correctly. A=%d;  B=%d;  out=%d",a,b,out);
-   */
+    assert property (check_sum) else $error("ADDER has not donne the sum correctly.");
+   
    
    property check_carry_out_1;
-   if (select == '0)
-   @(posedge clk)((b + a) > WIDTH*WIDTH-1) |=> (carry_out > 0);
+    @(posedge clk)((select == '0) && ((b + a) > WIDTH*WIDTH-1)) |=> (carry_out > 0);
    endproperty
    assert property (check_carry_out_1)else $error("carry_out should have a high value");
 
    property check_carry_out_0;
-   if (select == '0)
-   @(posedge clk)(a + b <= WIDTH*WIDTH-1) |=> (carry_out == 0);
+    @(posedge clk)((select == '0) && (a + b <= WIDTH*WIDTH-1)) |=> (carry_out == 0);
    endproperty
    assert property (check_carry_out_0)else $error("carry_out should have a low value");
    
    property check_a_min;
-   if (select == '0)
-   @(posedge clk)(a == '0) |=> (out == b);
+    @(posedge clk)(select == '0) && (a == '0) |=> (out == $past(b));
    endproperty
    assert property (check_a_min) else $error("out should have 'b' value");
 
-   property check_b_min;
-   if (select == '0)
-   @(posedge clk)(b == 0) |=> (out == b);
+   property check_b_min; 
+    @(posedge clk)(select == '0) && (b == 0) |=> (out == $past(a));
    endproperty
    assert property (check_b_min) else $error("out should have 'a' value");
 
    property check_negative_result;
-   if (select == 3'b001)
-   @(posedge clk)(b > a) |=> (out == b - a);
+   @(posedge clk)(select == 3'b001) && (b > a) |=> (out == $past(b) - $past(a));
    endproperty
    assert property (check_negative_result)else $error("SUBSTRACTOR has not donne the substraction b > a correctly ");
    
    property check_positive_result;
-   if (select == 3'b001)
-   @(posedge clk)(a > b) |=> (out == a - b);
+   @(posedge clk)(select == 3'b001) && (a > b) |=> (out == $past(a) - $past(b));
    endproperty
    assert property (check_positive_result)else $error("SUBSTRACTOR has not donne the substraction a > b correctly ");
-  /*
+  /* 
    property check_sign_bit_pos;
-   if (select == 3'b001)
-   @(posedge clk)(a > b) |=> (sign_bit == 0);
-   endproperty
+    @(posedge clk)(select == 3'b001) && (a > b) |=> (sign_bit == 0);
+    endproperty
    assert property (check_sign_bit_pos)else $error("sign bit is not positive");
 
    property check_sign_bit_negative;
-   if (select == 3'b001)
-   @(posedge clk)(b > a) |=> (sign_bit == 1);
-   endproperty
+    @(posedge clk)(select == 3'b001) && (b > a) |=> (sign_bit == 1);
+    endproperty
    assert property (sign_bit == 1)else $error("sign bit is not negative");
 */
    property check_a_sub_0;
-   if (select == 3'b001)
-   @(posedge clk)(a == 0) |=> (out == b)
+   @(posedge clk)(select == 3'b001) && (a == 0) |=> (out == $past(b));
    endproperty
    assert property (check_a_sub_0)else $error("SUBSTRACTOR has an error with the substraction");
+
+   property check_b_sub_0;
+   @(posedge clk) (select == 3'b001) && (b == 0) |=> (out == $past(a));
+   endproperty
+   assert property (check_b_sub_0)else $error("SUBSTRACTOR has an error with the substraction");
      
 endinterface
