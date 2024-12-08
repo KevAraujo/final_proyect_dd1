@@ -324,8 +324,15 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
   
   
   //------------------------------------------- Assertions -----------------------------------------------
-  
-  property check_sum;
+  logic [3:0] past_a;
+  logic [3:0] past_b;
+   always @(posedge clk) begin
+   past_a=$past(a);
+   past_b=$past(b);
+   end
+   
+   
+   property check_sum;
     @(posedge clk) (select == '0) |-> (out[WIDTH-1:0] == $past(a) + $past(b));
    endproperty
     assert property (check_sum) else $error("ADDER has not donne the sum correctly.");
@@ -334,32 +341,32 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
    property check_carry_out_1;
     @(posedge clk)((select == '0) && ((b + a) > WIDTH*WIDTH-1)) |=> (carry_out > 0);
    endproperty
-   assert property (check_carry_out_1)else $error("carry_out should have a high value");
+   assert property (check_carry_out_1)else $error("carry_out should have a high value.");
 
    property check_carry_out_0;
     @(posedge clk)((select == '0) && (a + b <= WIDTH*WIDTH-1)) |=> (carry_out == 0);
    endproperty
-   assert property (check_carry_out_0)else $error("carry_out should have a low value");
+   assert property (check_carry_out_0)else $error("carry_out should have a low value.");
    
    property check_a_min;
     @(posedge clk)(select == '0) && (a == '0) |=> (out == $past(b));
    endproperty
-   assert property (check_a_min) else $error("out should have 'b' value");
+   assert property (check_a_min) else $error("out should have 'b' value.");
 
    property check_b_min; 
     @(posedge clk)(select == '0) && (b == 0) |=> (out == $past(a));
    endproperty
-   assert property (check_b_min) else $error("out should have 'a' value");
+   assert property (check_b_min) else $error("out should have 'a' value.");
 
    property check_negative_result;
    @(posedge clk)(select == 3'b001) && (b > a) |=> (out == $past(b) - $past(a));
    endproperty
-   assert property (check_negative_result)else $error("SUBSTRACTOR has not donne the substraction b > a correctly ");
+   assert property (check_negative_result)else $error("SUBSTRACTOR has not donne the substraction b > a correctly.");
    
    property check_positive_result;
    @(posedge clk)(select == 3'b001) && (a > b) |=> (out == $past(a) - $past(b));
    endproperty
-   assert property (check_positive_result)else $error("SUBSTRACTOR has not donne the substraction a > b correctly ");
+   assert property (check_positive_result)else $error("SUBSTRACTOR has not donne the substraction a > b correctly.");
   /* 
    property check_sign_bit_pos;
     @(posedge clk)(select == 3'b001) && (a > b) |=> (sign_bit == 0);
@@ -374,11 +381,71 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
    property check_a_sub_0;
    @(posedge clk)(select == 3'b001) && (a == 0) |=> (out == $past(b));
    endproperty
-   assert property (check_a_sub_0)else $error("SUBSTRACTOR has an error with the substraction");
+   assert property (check_a_sub_0)else $error("SUBSTRACTOR has an error with the substraction.");
 
    property check_b_sub_0;
    @(posedge clk) (select == 3'b001) && (b == 0) |=> (out == $past(a));
    endproperty
-   assert property (check_b_sub_0)else $error("SUBSTRACTOR has an error with the substraction");
-     
+   assert property (check_b_sub_0)else $error("SUBSTRACTOR has an error with the substraction.");
+
+   property check_mult_result;
+   @(posedge clk) (select == 3'b110) |=> (out == $past(a) * $past(b));
+   endproperty
+   assert property (check_mult_result)else $error("MULTIPLICATOR has not done multiplication correctly.");
+   
+   property check_mult_by_zero;
+   @(posedge clk) (select == 3'b110) && ((a == 0) || (b == 0)) |=> (out == 0);
+   endproperty
+   assert property (check_mult_by_zero)else $error("The multiblication by zero should be zero.");
+   
+   property check_mult_a_1;
+   @(posedge clk) (select == 3'b110) && (a == 1) |=> (out == $past(b));
+   endproperty
+   assert property (check_mult_a_1)else $error("The multiblication result should be 'b'.");
+   
+   property check_mult_b_1;
+   @(posedge clk) (select == 3'b110) && (b == 1) |=> (out == $past(a));
+   endproperty
+   assert property (check_mult_b_1)else $error("The multiblication result should be 'a'.");
+   
+   property check_mult_pair_result;
+   @(posedge clk) (select == 3'b110) && ((a % 2 == 0) || (b % 2 == 0)) |=> (out % 2 == 0);
+   endproperty
+   assert property (check_mult_pair_result)else $error("The multiplication result should have been an even number.");
+   
+   property check_mult_unpair_result;
+   @(posedge clk) (select == 3'b110) && ((a % 2 == 1) && (b % 2 == 1)) |=> (out % 2 == 1) || (out == 0);
+   endproperty
+   assert property (check_mult_unpair_result)else $error("The multiplication result should have been an odd number.");
+   
+   property check_div_result;
+   @(posedge clk) (select == 3'b111) && (b != 0) |=> (out == $past(a) / $past(b));
+   endproperty
+   assert property (check_div_result)else $error("DIVIDER has not done division correctly.");
+   
+   property check_div_a_0;
+   @(posedge clk) (select == 3'b111) && (a == 0) && (b != 0) |=> (out == 0);
+   endproperty
+   assert property (check_div_a_0)else $error("The division result should have been 0.");
+   
+   property check_div_b_0;
+   @(posedge clk) (select == 3'b111) && (b == 0) |=> (inf == 1);
+   endproperty
+   assert property (check_div_b_0)else $error("The infinite flag should have been 1.");
+   
+   property check_div_b_1;
+   @(posedge clk) (select == 3'b111) && (b == 1) |=> (out == $past(a));
+   endproperty
+   assert property (check_div_b_1)else $error("The division result should have been 'a'.");
+   
+   property check_div_a_1;
+   @(posedge clk) (select == 3'b111) && (a == b) && (b != 0) |=> (out == 1);
+   endproperty
+   assert property (check_div_a_1)else $error("The division result should have been 1.");
+   
+   property check_and_0;
+   @(posedge clk) (select == 3'b010) |-> (out == $past(a) & $past(b));
+   endproperty
+   assert property (check_and_0)else $error("ERROR IN BITWISE A=%04b; B=%04b; out=%04b; real result=%04b",past_a, past_b, out, (past_a & past_b));
+
 endinterface
