@@ -1,11 +1,11 @@
-interface alu_if #(parameter WIDTH = 4, n_alu = 4)(input clk);
+interface alu_if #(parameter WIDTH = 4, n_alu = 1)(input clk);
   logic [WIDTH*n_alu-1:0] a;
   logic [WIDTH*n_alu-1:0] b;
   logic [2:0] select;
-  logic a_greater, a_equal, a_less;
+  logic a_greater, a_equal, a_less, inf;
   logic [WIDTH*n_alu*2-1:0] out;
   logic [0:0] carry_out;
-  logic enable;
+  logic [n_alu-1:0] enable;
   logic arst;
 
   initial begin
