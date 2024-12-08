@@ -8,7 +8,8 @@ module ALU_VECTORIAL #(parameter WIDTH = 4, n_alu = 1)(
     //input wire enable,
     output wire carry_out,
     input wire [n_alu-1:0] enable,
-    output wire a_greater, a_equal, a_less, inf,
+    output wire a_greater, a_equal, a_less, 
+    output wire [n_alu-1:0] inf,
     output wire [WIDTH*n_alu*2-1:0] data_out   // Salida de datos
 );
 
@@ -32,3 +33,5 @@ module ALU_VECTORIAL #(parameter WIDTH = 4, n_alu = 1)(
                 .inf(inf[i])
             );
         end
+    endgenerate
+endmodule
