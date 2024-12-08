@@ -8,14 +8,12 @@ module ALU_VECTORIAL #(parameter WIDTH = 4, n_alu = 1)(
     //input wire enable,
     output wire carry_out,
     input wire [n_alu-1:0] enable,
-    output wire a_greater, a_equal, a_less,
+    output wire a_greater, a_equal, a_less, inf,
     output wire [WIDTH*n_alu*2-1:0] data_out   // Salida de datos
 );
 
-    // Declaración de la cantidad de instancias
     genvar i;
 
-    // Generación de instancias del módulo `mi_modulo`
     generate
         for (i = 0; i < n_alu; i = i + 1) begin : gen_inst
             ALU u_modulo (
@@ -30,9 +28,7 @@ module ALU_VECTORIAL #(parameter WIDTH = 4, n_alu = 1)(
                 .carry_out(carry_out), 
                 .a_greater(a_greater),
                 .a_equal(a_equal),
-                .a_less(a_less)
+                .a_less(a_less),
+                .inf(inf[i])
             );
         end
-    endgenerate
-
-endmodule
