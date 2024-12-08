@@ -3,7 +3,7 @@ module ALU #(parameter WIDTH = 4) (
   input wire [2:0] select,
   input wire arst,
   output wire [WIDTH*2-1:0] out,
-  output wire a_greater, a_equal, a_less,
+  output wire a_greater, a_equal, a_less,inf,
   input wire clk,
   input wire enable,
   output wire carry_out
@@ -21,6 +21,7 @@ module ALU #(parameter WIDTH = 4) (
     .a_greater(a_greater),
     .a_equal(a_equal),
     .a_less(a_less),
+    .inf,
     .clk(clk)
   );
 
@@ -109,10 +110,13 @@ endmodule
 //Divisor
 module divisor #(parameter WIDTH = 4) (
   input wire [WIDTH-1:0] a, b,
-  output wire [WIDTH-1:0] div
+  output wire [WIDTH-1:0] div,
+  output wire inf
 );
 
   assign div = a / b;
+  assign inf = (b == 0)? 1'b1 : 1'b0;
+  
 endmodule
 
 //Selección
@@ -124,6 +128,8 @@ module selection #(parameter WIDTH = 4)(
   wire [WIDTH-1:0] r_and, r_or, r_xor,
   wire [WIDTH*2-1:0] result_mul,
   output wire a_greater, a_equal, a_less,
+  wire inst_inf,
+  output reg inf,
   output reg carry_out,
   input wire enable,
   input wire arst,
@@ -138,7 +144,8 @@ module selection #(parameter WIDTH = 4)(
   divisor #(WIDTH) u_divisor (
     .a(a),
     .b(b),
-    .div(div)
+    .div(div),
+    .inf(inst_inf)
   );
   
     adder #(WIDTH) u_adder (
@@ -181,6 +188,7 @@ module selection #(parameter WIDTH = 4)(
   );
   
   always @(posedge clk or negedge arst) begin
+  inf = inst_inf;
   if (arst == 0)begin
     if (enable == 1)begin
         out = (select == 3'b000) ? (result_add) : (select == 3'b001) ? result_sub : (select == 3'b010) ? r_and : (select == 3'b011) ? r_or : (select == 3'b100) ? r_xor : (select == 3'b101) ? a_equal : (select == 3'b110) ? result_mul : (select == 3'b111) ? div : 0;
@@ -195,4 +203,3 @@ module selection #(parameter WIDTH = 4)(
   out = 0;
   end
 endmodule
-
