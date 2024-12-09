@@ -444,8 +444,12 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 1)(input clk);
    assert property (check_div_a_1)else $error("The division result should have been 1.");
    
    property check_and_0;
-   @(posedge clk) (select == 3'b010) |-> (out == $past(a) & $past(b));
+   @(posedge clk) (select == 3'b010) |=>  (out == ($past(a) & $past(b)));
    endproperty
-   assert property (check_and_0)else $error("ERROR IN BITWISE A=%04b; B=%04b; out=%04b; real result=%04b",past_a, past_b, out, (past_a & past_b));
-
+   assert property (check_and_0)else begin
+   for (int k = 0; k < $bits(a); k++) begin
+     if (out[k] !== (a[k] & b[k])) $error("output BITWISE AND bit (%d) is sould be 0",k);
+   end
+   end
+     
 endinterface
