@@ -448,7 +448,8 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 1)(input clk);
    endproperty
    assert property (check_and_0)else begin
    for (int k = 0; k < $bits(a); k++) begin
-     if (out[k] !== (a[k] & b[k])) $error("output BITWISE AND bit (%d) is sould be 0",k);
+     if (((past_a[k] && past_b[k]) == 0) && (out[k] == 1)) 
+     $error("output BITWISE AND bit (%0d) is sould be 0",k);
    end
    end
      
