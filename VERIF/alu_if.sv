@@ -326,7 +326,7 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 1)(input clk);
   
   //------------------------------------------- Assertions -----------------------------------------------
   
-     logic [WIDTH-1:0] past_a;
+    logic [WIDTH-1:0] past_a;
   logic [WIDTH-1:0] past_b;
    always @(posedge clk) begin
    past_a=$past(a[WIDTH-1:0]);
@@ -336,136 +336,161 @@ interface alu_if #(parameter WIDTH = 4, n_alu = 1)(input clk);
    genvar i;
    for(i=0;i<4;i = i+1) begin:check_add_loop
    property check_sum;
-    @(posedge clk) (select == '0) |-> (out[WIDTH*2*(i+1)-1:WIDTH*2*i] == (past_a[WIDTH*(i+1)-1:WIDTH*i] + past_b[WIDTH*(i+1)-1:WIDTH*i]));//$past(a[WIDTH*(i+1)-1:WIDTH*i]) + $past(b[WIDTH*(i+1)-1:WIDTH*i]));
+    @(posedge clk) (select == '0) &&  (enable[0:0] == 1) && (arst ==0) |-> (out[WIDTH*2*(i+1)-1:WIDTH*2*i] == (past_a[WIDTH*(i+1)-1:WIDTH*i] + past_b[WIDTH*(i+1)-1:WIDTH*i]));//$past(a[WIDTH*(i+1)-1:WIDTH*i]) + $past(b[WIDTH*(i+1)-1:WIDTH*i]));
    endproperty
    assert property (check_add_loop[i].check_sum) else $error("ADDER[%0d] has not donne the sum correctly out -> %0h, a -> %0h, b -> %0h, sum -> %0h.",i, {carry_out[i],out[(WIDTH*2*(i)+WIDTH-1):WIDTH*2*i]},past_a[WIDTH*(i+1)-1:WIDTH*i], past_b[WIDTH*(i+1)-1:WIDTH*i],(past_a[WIDTH*(i+1)-1:WIDTH*i] + past_b[WIDTH*(i+1)-1:WIDTH*i]));
    end
    */
    /*
    property check_sum;
-    @(posedge clk) (select == '0) |-> (out[WIDTH*2-1:0] <= past_a + past_b);
+    @(posedge clk) (select == '0)  (enable[0:0] == 1) && (arst ==0) |-> (out[WIDTH*2-1:0] <= past_a + past_b);
    endproperty
    assert property (check_sum) else $error("ADDER has not donne the sum correctly out -> %0d, a -> %0d b -> %0d.", (out[WIDTH*2-1:0]),past_a, past_b);
     */
    property check_carry_out_1;
-    @(posedge clk)((select == '0) && ((b[WIDTH-1:0] + a[WIDTH-1:0]) > WIDTH*WIDTH-1)) |=> (carry_out[0:0] > 0);
+    @(posedge clk) (select == '0) &&  (enable[0:0] == 1) && (arst ==0)  && ((b[WIDTH-1:0] + a[WIDTH-1:0]) > WIDTH*WIDTH-1) |=> (carry_out[0:0] > 0);
    endproperty
    assert property (check_carry_out_1) else $error("carry_out should have a high value.");
 
    property check_carry_out_0;
-    @(posedge clk)((select == '0) && (a[WIDTH-1:0] + b[WIDTH-1:0] <= WIDTH*WIDTH-1)) |=> (carry_out[0:0] == 0);
+    @(posedge clk) (select == '0) &&  (enable[0:0] == 1) && (arst ==0) && (a[WIDTH-1:0] + b[WIDTH-1:0] <= WIDTH*WIDTH-1) |=> (carry_out[0:0] == 0);
    endproperty
    assert property (check_carry_out_0)else $error("carry_out should have a low value.");
    
    property check_a_min;
-    @(posedge clk)(select == '0) && (a[WIDTH-1:0] == '0) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
+    @(posedge clk)(select == '0) &&  (enable[0:0] == 1) && (arst ==0) && (a[WIDTH-1:0] == '0) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_a_min) else $error("out should have 'b' value. out -> %0d, a -> %0d b -> %0d.", (out[WIDTH*2-1:0]),past_a, past_b);
 
    property check_b_min; 
-    @(posedge clk)(select == '0) && (b[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
+    @(posedge clk) (select == '0) &&  (enable[0:0] == 1) && (arst ==0) && (b[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
    endproperty
    assert property (check_b_min) else $error("out should have 'a' value.");
 
    property check_negative_result;
-   @(posedge clk)(select == 3'b001) && (b[WIDTH-1:0] > a[WIDTH-1:0]) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]) - $past(a[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b001) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] > a[WIDTH-1:0]) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]) - $past(a[WIDTH-1:0]));
    endproperty
    assert property (check_negative_result)else $error("SUBSTRACTOR has not donne the substraction b > a correctly.");
    
    property check_positive_result;
-   @(posedge clk)(select == 3'b001) && (a[WIDTH-1:0] > b[WIDTH-1:0]) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) - $past(b[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b001) &&  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] > b[WIDTH-1:0]) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) - $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_positive_result)else $error("SUBSTRACTOR has not donne the substraction a > b correctly.");
   /* 
    property check_sign_bit_pos;
-    @(posedge clk)(select == 3'b001) && (a[WIDTH-1:0] > b[WIDTH-1:0]) |=> (sign_bit == 0);
+    @(posedge clk)(select == 3'b001)  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] > b[WIDTH-1:0]) |=> (sign_bit == 0);
     endproperty
    assert property (check_sign_bit_pos)else $error("sign bit is not positive");
 
    property check_sign_bit_negative;
-    @(posedge clk)(select == 3'b001) && (b[WIDTH-1:0] > a[WIDTH-1:0]) |=> (sign_bit == 1);
+    @(posedge clk)(select == 3'b001)  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] > a[WIDTH-1:0]) |=> (sign_bit == 1);
     endproperty
    assert property (sign_bit == 1)else $error("sign bit is not negative");
 */
    property check_a_sub_0;
-   @(posedge clk)(select == 3'b001) && (a[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
+   @(posedge clk)(select == 3'b001) &&  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_a_sub_0)else $error("SUBSTRACTOR has an error with the substraction.");
 
    property check_b_sub_0;
-   @(posedge clk) (select == 3'b001) && (b[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b001) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] == 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
    endproperty
    assert property (check_b_sub_0)else $error("SUBSTRACTOR has an error with the substraction.");
 
    property check_mult_result;
-   @(posedge clk) (select == 3'b110) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) * $past(b[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) * $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_mult_result)else $error("MULTIPLICATOR has not done multiplication correctly.");
    
    property check_mult_by_zero;
-   @(posedge clk) (select == 3'b110) && ((a[WIDTH-1:0] == 0) || (b[WIDTH-1:0] == 0)) |=> (out[WIDTH*2-1:0] == 0);
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] == 0) || (b[WIDTH-1:0] == 0)) |=> (out[WIDTH*2-1:0] == 0);
    endproperty
    assert property (check_mult_by_zero)else $error("The multiblication by zero should be zero.");
    
    property check_mult_a_1;
-   @(posedge clk) (select == 3'b110) && (a[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_mult_a_1)else $error("The multiblication result should be 'b'.");
    
    property check_mult_b_1;
-   @(posedge clk) (select == 3'b110) && (b[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
    endproperty
    assert property (check_mult_b_1)else $error("The multiblication result should be 'a'.");
    
    property check_mult_pair_result;
-   @(posedge clk) (select == 3'b110) && ((a[WIDTH-1:0] % 2 == 0) || (b[WIDTH-1:0] % 2 == 0)) |=> (out[WIDTH*2-1:0] % 2 == 0);
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] % 2 == 0) || (b[WIDTH-1:0] % 2 == 0)) |=> (out[WIDTH*2-1:0] % 2 == 0);
    endproperty
    assert property (check_mult_pair_result)else $error("The multiplication result should have been an even number.");
    
    property check_mult_unpair_result;
-   @(posedge clk) (select == 3'b110) && ((a[WIDTH-1:0] % 2 == 1) && (b[WIDTH-1:0] % 2 == 1)) |=> (out[WIDTH*2-1:0] % 2 == 1) || (out[WIDTH*2-1:0] == 0);
+   @(posedge clk) (select == 3'b110) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] % 2 == 1) && (b[WIDTH-1:0] % 2 == 1)) |=> (out[WIDTH*2-1:0] % 2 == 1) || (out[WIDTH*2-1:0] == 0);
    endproperty
    assert property (check_mult_unpair_result)else $error("The multiplication result should have been an odd number.");
    
    property check_div_result;
-   @(posedge clk) (select == 3'b111) && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) / $past(b[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b111) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]) / $past(b[WIDTH-1:0]));
    endproperty
    assert property (check_div_result)else $error("DIVIDER has not done division correctly.");
    
    property check_div_a_0;
-   @(posedge clk) (select == 3'b111) && (a[WIDTH-1:0] == 0) && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == 0);
+   @(posedge clk) (select == 3'b111) &&  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] == 0) && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == 0);
    endproperty
    assert property (check_div_a_0)else $error("The division result should have been 0.");
    
    property check_div_b_0;
-   @(posedge clk) (select == 3'b111) && (b[WIDTH-1:0] == 0) |=> (inf == 1);
+   @(posedge clk) (select == 3'b111) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] == 0) |=> (inf == 1);
    endproperty
    assert property (check_div_b_0)else $error("The infinite flag should have been 1.");
    
    property check_div_b_1;
-   @(posedge clk) (select == 3'b111) && (b[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
+   @(posedge clk) (select == 3'b111) &&  (enable[0:0] == 1) && (arst ==0)  && (b[WIDTH-1:0] == 1) |=> (out[WIDTH*2-1:0] == $past(a[WIDTH-1:0]));
    endproperty
    assert property (check_div_b_1)else $error("The division result should have been 'a'.");
    
    property check_div_a_1;
-   @(posedge clk) (select == 3'b111) && (a[WIDTH-1:0] == b[WIDTH-1:0]) && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == 1);
+   @(posedge clk) (select == 3'b111) &&  (enable[0:0] == 1) && (arst ==0)  && (a[WIDTH-1:0] == b[WIDTH-1:0]) && (b[WIDTH-1:0] != 0) |=> (out[WIDTH*2-1:0] == 1);
    endproperty
    assert property (check_div_a_1)else $error("The division result should have been 1.");
       
    property check_and;
-   @(posedge clk) (select == 3'b010) |=>  (out[WIDTH*2-1:0] == ($past(a[WIDTH-1:0]) & $past(b[WIDTH-1:0])));
+   @(posedge clk) (select == 3'b010) &&  (enable[0:0] == 1) && (arst ==0)  |=>  (out[WIDTH*2-1:0] == ($past(a[WIDTH-1:0]) & $past(b[WIDTH-1:0])));
    endproperty
    assert property (check_and)else $error("output BITWISE AND sould be max value");   
    
    property check_all_and_0;
-   @(posedge clk) (select == 3'b010) && ((a[WIDTH-1:0] == '0) || (b[WIDTH-1:0] == '0))|=>  (out[WIDTH*2-1:0] == '0);
+   @(posedge clk) (select == 3'b010) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] == '0) || (b[WIDTH-1:0] == '0))|=>  (out[WIDTH*2-1:0] == '0);
    endproperty
    assert property (check_all_and_0)else $error("output BITWISE AND sould be max value");
    
    property check_all_and_1;
-   @(posedge clk) (select == 3'b010) && ((a[WIDTH-1:0] == '1) || (b[WIDTH-1:0] == '1))|=>  (out[WIDTH*2-1:0] == '1);
+   @(posedge clk) (select == 3'b010) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] == '1) && (b[WIDTH-1:0] == '1))|=>  (out[WIDTH*2-1:0] == '1);
    endproperty
    assert property (check_all_and_0)else $error("output BITWISE AND sould be 1.");
-
+   
+   property check_or;
+   @(posedge clk) (select == 3'b011) &&  (enable[0:0] == 1) && (arst ==0)  |=>  (out[WIDTH*2-1:0] == ($past(a[WIDTH-1:0]) | $past(b[WIDTH-1:0])));
+   endproperty
+       assert property (check_and) else $error("output BITWISE OR sould be max value");   
+   
+   property check_all_or_0;
+   @(posedge clk) (select == 3'b011) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] == '0) && (b[WIDTH-1:0] == '0))|=>  (out[WIDTH*2-1:0] == '0);
+   endproperty
+   assert property (check_all_and_0) else $error("output BITWISE OR sould be max value");
+   
+   property check_all_or_1;
+   @(posedge clk) (select == 3'b011) &&  (enable[0:0] == 1) && (arst ==0)  && ((a[WIDTH-1:0] == '1) || (b[WIDTH-1:0] == '1))|=>  (out[WIDTH*2-1:0] == '1);
+   endproperty
+   assert property (check_all_and_0)else $error("output BITWISE OR sould be 1.");
+   
+   property check_enable_0_output_0;
+   @(posedge clk)  (enable[0:0] == 0) && (arst ==0)  |=> (out[WIDTH*2-1:0] == '0);
+   endproperty
+   assert property (check_enable_0_output_0)else $error("ALU N is producing non-zero output without being enabled");
+   
+   property check_register_reset;
+   @(posedge clk)  (arst ==1)  |=> (out == '0);
+   endproperty
+   assert property (check_enable_0_output_0)else $error("arst has not worked");
+    
      
 endinterface
