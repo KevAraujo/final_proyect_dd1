@@ -187,7 +187,7 @@ module selection #(parameter WIDTH = 4)(
     .bitwisexor(r_xor)
   );
   
-  always @(posedge clk or negedge arst) begin
+  always @(posedge clk or posedge arst) begin
   inf = inst_inf;
   if (arst == 0)begin
     if (enable == 1)begin
